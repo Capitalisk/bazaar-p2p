@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="https://saasufy.com/node_modules/saasufy-components/styles.css" rel="stylesheet" />
+        <script src="https://saasufy.com/node_modules/saasufy-components/socket.js" type="module" defer></script>
+        <script src="https://saasufy.com/node_modules/saasufy-components/app-router.js" type="module" defer></script>
+        <script src="https://saasufy.com/node_modules/saasufy-components/input-provider.js" type="module" defer></script>
+        <script src="https://saasufy.com/node_modules/saasufy-components/collection-viewer.js" type="module" defer></script>
+        <script src="https://saasufy.com/node_modules/saasufy-components/input-combiner.js" type="module" defer></script>
+        <script src="https://saasufy.com/node_modules/saasufy-components/collection-adder-form.js" type="module" defer></script>
+        <script src="https://saasufy.com/node_modules/saasufy-components/log-in-form.js" type="module" defer></script>
+        <script src="https://saasufy.com/node_modules/saasufy-components/model-input.js" type="module" defer></script>
+        <script src="https://saasufy.com/node_modules/saasufy-components/model-text.js" type="module" defer></script>
+        <script src="https://saasufy.com/node_modules/saasufy-components/model-viewer.js" type="module" defer></script>
+        <style>
+            .card-container {
+                border: 1px solid #cccccc;
+                border-radius: 5px;
+                justify-content: space-between;
+            }
+
+            .card-section {
+                display: flex;
+                flex-direction: column;
+                width: 30%;
+            }
+
+            .card-section:last-child {
+                align-items: flex-end;
+            }
+
+            collection-viewer > [slot].pagination-button {
+                display: flex;
+                text-align: center;
+                width: 50px;
+            }
+
+            .nav-bar {
+                justify-content: flex-end;
+            }
+
+            .narrow-area {
+                width: 500px;
+            }
+
+            .main-app-router {
+                width: 700px;
+                max-width: 100%;
+            }
+
+            .sales-offers-viewport {
+                height: 450px;
+            }
+
+            .my-sell-offers-viewport {
+                border-collapse: collapse;
+            }
+
+            .my-sell-offers-viewport td, .my-sell-offers-viewport th {
+                border: 1px solid #000000;
+                padding: 5px;
+            }
+
+            .my-sell-offers-viewer {
+                width: 100%;
+            }
+
+            collection-viewer > [slot=viewport].my-sell-offers-viewport {
+                display: table;
+                width: 100%;
+            }
+
+            .bank-details-area {
+                border: 1px solid #000000;
+                padding: 10px;
+                background-color: #f8f8f8;
+                border-radius: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <socket-provider class="container container-vertical container-centered-cross container-padded-large" url="wss://saasufy.com/sid8002/socketcluster/">
+            <div class="container container-medium container-spaced-large container-horizontal nav-bar">
+                <a href="#/market">Market</a>
+                <a href="#/my-sell-offers">My sell offers</a>
+                <a href="#/sell">Sell crypto</a>
+            </div>
+
+            <app-router class="main-app-router">
+
+                <template slot="page" route-path="" redirect="/market"></template>
+
+                <template slot="page" route-path="/login">
+                    <h2>Login</h2>
+                    <log-in-form
+                        hostname="capitalisk.com"
+                        port="443"
+                        network-symbol="clsk"
+                        chain-module-name="capitalisk_chain"
+                        secure="true"
+                    ></log-in-form>
+                </template>
+
+                <template slot="page" route-path="/buy/:saleOfferId/wallet/:walletAddress">
+                    <div class="container container-vertical container-centered-cross">
+                        <h2>Buy crypto asset instructions</h2>
+                        <model-viewer
+                            model-type="SaleOffer"
+                            model-id="{{saleOfferId}}"
+                            model-fields="minQty,maxQty,price,bankBeneficiaryName,bankName,bankBIC,bankAccountNumber,fiatCurrency"
+                        >
+                            <template slot="item">
+                                <b>Wire transfer instructions</b>
+                                <div>
+                                    Send an amount between
+                                    {{Math.round(SaleOffer.minQty * SaleOffer.price)}}
+                                    and
+                                    {{Math.round(SaleOffer.maxQty * SaleOffer.price)}}
+                                    {{SaleOffer.fiatCurrency.toUpperCase()}}
+                                    to the following bank account via a wire transfer:
+                                </div>
+                                <div class="bank-details-area">
+                                    <div>Account name: {{SaleOffer.bankBeneficiaryName}}</div>
+                                    <div>Bank name: {{SaleOffer.bankName}}</div>
+                                    <div>Swift/BIC: {{SaleOffer.bankBIC}}</div>
+                                    <div>Account number: {{SaleOffer.bankAccountNumber}}</div>
+                                    <div>Ref: {{walletAddress}}</div>
+                                </div>
+                            </template>
+
+                            <div class="container container-vertical container-spaced-medium" slot="viewport"></div>
+                        </model-viewer>
+                    </div>
+                </template>
+
+                <template slot="page" route-path="/buy/:saleOfferId">
+                    <div class="container container-vertical container-centered-cross">
+                        <h2>Buy crypo asset</h2>
+                        <div class="container container-vertical container-spaced-medium">
+                            <div>
+                                Min qty:
+                                <model-text
+                                    type="text"
+                                    model-type="SaleOffer"
+                                    model-id="{{saleOfferId}}"
+                                    model-field="minQty"
+                              ></model-text>
+                            </div>
+                            <div>
+                                Max qty:
+                                <model-text
+                                    type="text"
+                                    model-type="SaleOffer"
+                                    model-id="{{saleOfferId}}"
+                                    model-field="maxQty"
+                              ></model-text>
+                            </div>
+                            <div>
+                                Price:
+                                <model-text
+                                    type="text"
+                                    model-type="SaleOffer"
+                                    model-id="{{saleOfferId}}"
+                                    model-field="price"
+                                ></model-text>
+                                per
+                                <model-text
+                                    type="text"
+                                    model-type="SaleOffer"
+                                    model-id="{{saleOfferId}}"
+                                    model-field="cryptoAsset"
+                                ></model-text>
+                            </div>
+                            <div>
+                                Your
+                                <model-text
+                                    type="text"
+                                    model-type="SaleOffer"
+                                    model-id="{{saleOfferId}}"
+                                    model-field="cryptoAsset"
+                                ></model-text>
+                                wallet address:
+                                <input-provider
+                                    type="text"
+                                    consumers=".buy-offer-link:href"
+                                    value=""
+                                    provider-template="#/buy/{{saleOfferId}}/wallet/{{value}}"
+                                    placeholder="Wallet address"
+                                ></input-provider>
+                            </div>
+                            <a class="buy-offer-link" href="javascript: void(0)">Buy</a>
+                        </div>
+                    </div>
+                </template>
+
+                <template slot="page" route-path="/my-sell-offers" no-auth-redirect="/login">
+                    <div class="container container-vertical container-centered-cross">
+                        <h2>My sell offers</h2>
+                        <collection-viewer
+                            class="my-sell-offers-viewer"
+                            collection-type="SaleOffer"
+                            collection-fields="minQty,maxQty,price,fiatCurrency,cryptoAsset"
+                            collection-view="accountView"
+                            collection-view-params="accountId='{{socket?.authToken?.accountId}}'"
+                            collection-page-size="5"
+                        >
+                            <template slot="first-item">
+                                <tr>
+                                    <th>Bank account name</th>
+                                    <th>Min qty</th>
+                                    <th>Max qty</th>
+                                    <th>Price</th>
+                                    <th>Fiat currency</th>
+                                    <th>Crypto asset</th>
+                                </tr>
+                            </template>
+
+                            <template slot="item">
+                                <tr>
+                                    <td>
+                                        <model-input
+                                            type="text"
+                                            model-type="SaleOffer"
+                                            model-id="{{SaleOffer.id}}"
+                                            model-field="bankBeneficiaryName"
+                                            placeholder="Bank account name"
+                                        ></model-input>
+                                    </td>
+                                    <td>
+                                        <model-input
+                                            type="number"
+                                            model-type="SaleOffer"
+                                            model-id="{{SaleOffer.id}}"
+                                            model-field="minQty"
+                                            placeholder="Min qty"
+                                        ></model-input>
+                                    </td>
+                                    <td>
+                                        <model-input
+                                            type="number"
+                                            model-type="SaleOffer"
+                                            model-id="{{SaleOffer.id}}"
+                                            model-field="maxQty"
+                                            placeholder="Max qty"
+                                        ></model-input>
+                                    </td>
+                                    <td>
+                                        <model-input
+                                            type="text"
+                                            model-type="SaleOffer"
+                                            model-id="{{SaleOffer.id}}"
+                                            model-field="price"
+                                            placeholder="Price"
+                                        ></model-input>
+                                    </td>
+                                    <td>{{SaleOffer.fiatCurrency}}</td>
+                                    <td>{{SaleOffer.cryptoAsset}}</td>
+                                </tr>
+                            </template>
+
+                            <template slot="loader">
+                                <div class="loading-spinner-container">
+                                <div class="spinning">&#8635;</div>
+                                </div>
+                            </template>
+
+                            <table slot="viewport" class="my-sell-offers-viewport"></table>
+
+                            <input class="pagination-button" slot="previous-page" value="&lt;">
+                            <div slot="page-number"></div>
+                            <input class="pagination-button" slot="next-page" value="&gt;">
+                        </collection-viewer>
+                    </div>
+                </template>
+
+                <template slot="page" route-path="/sell" no-auth-redirect="/login">
+                    <div class="container container-vertical container-centered-cross narrow-area">
+                        <h2>Sell crypto</h2>
+                        <collection-adder-form
+                            class="container container-vertical container-medium container-spaced-medium"
+                            collection-type="SaleOffer"
+                            trim-spaces
+                        >
+                            <div slot="message"></div>
+                            
+                            <label>
+                                Fiat currency:
+                                <input-provider
+                                    name="fiatCurrency"
+                                    type="select"
+                                    options="aud,usd"
+                                    consumers=".sell-market-combiner"
+                                    value="aud"
+                                ></input-provider>
+                            </label>
+
+                            <label>
+                                Crypto asset:
+                                <input-provider
+                                    name="cryptoAsset"
+                                    type="select"
+                                    options="clsk,btc"
+                                    consumers=".sell-market-combiner"
+                                    value="clsk"
+                                ></input-provider>
+                            </label>
+
+                            <label>
+                                Min qty:
+                                <input type="number" name="minQty" step="any" placeholder="0">
+                            </label>
+
+                            <label>
+                                Max qty:
+                                <input type="number" name="maxQty" step="any">
+                            </label>
+
+                            <label>
+                                Price:
+                                <input type="text" name="price">
+                            </label>
+
+                            <hr>
+
+                            <fieldset>
+                                <legend>Bank wire transfer details</legend>
+
+                                <label>
+                                    Bank name:
+                                    <input type="text" name="bankName">
+                                </label>
+
+                                <label>
+                                    Beneficiary name:
+                                    <input type="text" name="bankBeneficiaryName">
+                                </label>
+
+                                <label>
+                                    Swift/BIC:
+                                    <input type="text" name="bankBIC">
+                                </label>
+
+                                <label>
+                                    Account number:
+                                    <input type="text" name="bankAccountNumber">
+                                </label>
+                            </fieldset>
+
+                            <input-combiner
+                                class="sell-market-combiner"
+                                consumers=".sell-market-name"
+                                provider-template="{{value.cryptoAsset}}/{{value.fiatCurrency}}"
+                            ></input-combiner>
+
+                            <input class="sell-market-name" name="marketName" type="hidden">
+
+                            <input name="accountId" type="hidden" value="{{socket?.authToken?.accountId}}">
+
+                            <input type="submit" value="Submit offer">
+                        </collection-adder-form>
+                    </div>
+                </template>
+
+                <template slot="page" route-path="/market">
+                    <div class="container container-vertical container-centered-cross narrow-area">
+                        <h2>Crypto Market</h2>
+                        <div class="container container-vertical container-medium container-spaced-medium">
+                            <div>
+                                <span>Crypto asset:</span>
+                                <input-provider
+                                    name="cryptoAsset"
+                                    type="select"
+                                    options="clsk,btc"
+                                    consumers=".market-combiner"
+                                    value="clsk"
+                                ></input-provider>
+                            </div>
+                            <div>
+                                <span>Fiat currency:</span>
+                                <input-provider
+                                    name="fiatCurrency"
+                                    type="select"
+                                    options="aud,usd"
+                                    consumers=".market-combiner"
+                                    value="aud"
+                                ></input-provider>
+                            </div>
+                            <div>
+                                <span>Desired amount:</span>
+                                <input-provider
+                                    type="text"
+                                    value=""
+                                ></input-provider>
+                            </div>
+                            <input-combiner
+                                class="market-combiner"
+                                consumers=".sales-offers-viewer:collection-view-params"
+                                provider-template="marketName='{{value.cryptoAsset}}/{{value.fiatCurrency}}'"
+                                debounce-delay="500"
+                            ></input-combiner>
+                        </div>
+                        <div class="container container-vertical container-medium container-spaced-medium">
+                            <h3>Offers</h3>
+                            <collection-viewer
+                                class="sales-offers-viewer"
+                                collection-type="SaleOffer"
+                                collection-fields="bankBeneficiaryName,price,minQty,maxQty"
+                                collection-view="marketView"
+                                collection-view-params="marketName='clsk/aud'"
+                                collection-page-size="5"
+                            >
+                                <template slot="item">
+                                    <a href="#/buy/{{SaleOffer.id}}">
+                                        <div class="container container-horizontal container-padded-medium card-container">
+                                            <div class="container card-section">
+                                                <div>{{SaleOffer.bankBeneficiaryName}}</div>
+                                            </div>
+                                            <div class="container card-section">
+                                                <div>Price: {{SaleOffer.price}}</div>
+                                                <div>Min qty: {{SaleOffer.minQty}}</div>
+                                                <div>Max qty: {{SaleOffer.maxQty}}</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </template>
+
+                                <template slot="no-item">
+                                    <div>No offers available.</div>
+                                </template>
+
+                                <template slot="loader">
+                                    <div class="loading-spinner-container">
+                                    <div class="spinning">&#8635;</div>
+                                    </div>
+                                </template>
+
+                                <div slot="viewport" class="sales-offers-viewport container container-vertical container-spaced-medium"></div>
+
+                                <input class="pagination-button" slot="previous-page" value="&lt;">
+                                <div slot="page-number"></div>
+                                <input class="pagination-button" slot="next-page" value="&gt;">
+                            </collection-viewer>
+                        </div>
+                    </div>
+                </template>
+
+                <div class="container container-vertical container-centered-cross" slot="viewport"></div>
+            </app-router>
+        </socket-provider>
+    </body>
+</html>
