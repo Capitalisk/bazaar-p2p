@@ -388,14 +388,16 @@
                             <div>
                                 <span>Desired amount:</span>
                                 <input-provider
-                                    type="text"
+                                    name="targetQty"
+                                    type="number"
+                                    consumers=".market-combiner"
                                     value=""
                                 ></input-provider>
                             </div>
                             <input-combiner
                                 class="market-combiner"
                                 consumers=".sales-offers-viewer:collection-view-params"
-                                provider-template="marketName='{{value.cryptoAsset}}/{{value.fiatCurrency}}'"
+                                provider-template="marketName='{{value.cryptoAsset}}/{{value.fiatCurrency}}',targetQty={{value.targetQty || 0}}"
                                 debounce-delay="500"
                             ></input-combiner>
                         </div>
@@ -406,7 +408,7 @@
                                 collection-type="SaleOffer"
                                 collection-fields="bankBeneficiaryName,price,minQty,maxQty"
                                 collection-view="marketView"
-                                collection-view-params="marketName='clsk/aud'"
+                                collection-view-params="marketName='clsk/aud',targetQty=0"
                                 collection-page-size="5"
                             >
                                 <template slot="item">
