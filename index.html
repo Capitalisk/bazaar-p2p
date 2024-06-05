@@ -75,6 +75,10 @@
         text-align: center;
       }
     </style>
+    <script type="module">
+      import config from './config.js';
+      window.config = config;
+    </script>
   </head>
   <body>
     <socket-provider class="container container-vertical container-centered-cross container-padded-large" url="wss://saasufy.com/sid8002/socketcluster/">
@@ -289,24 +293,24 @@
               <div slot="message"></div>
 
               <label>
-                Fiat currency:
-                <input-provider
-                  name="fiatCurrency"
-                  type="select"
-                  options="aud,usd"
-                  consumers=".sell-market-combiner"
-                  value="aud"
-                ></input-provider>
-              </label>
-
-              <label>
                 Crypto asset:
                 <input-provider
                   name="cryptoAsset"
                   type="select"
-                  options="clsk,btc"
+                  options="{{window.config ? window.config.cryptoAssets.join(',') : ''}}"
                   consumers=".sell-market-combiner"
                   value="clsk"
+                ></input-provider>
+              </label>
+
+              <label>
+                Fiat currency:
+                <input-provider
+                  name="fiatCurrency"
+                  type="select"
+                  options="{{window.config ? window.config.fiatCurrencies.join(',') : ''}}"
+                  consumers=".sell-market-combiner"
+                  value="aud"
                 ></input-provider>
               </label>
 
@@ -375,7 +379,7 @@
                 <input-provider
                   name="cryptoAsset"
                   type="select"
-                  options="clsk,btc"
+                  options="{{window.config ? window.config.cryptoAssets.join(',') : ''}}"
                   consumers=".market-combiner"
                   value="clsk"
                 ></input-provider>
@@ -385,7 +389,7 @@
                 <input-provider
                   name="fiatCurrency"
                   type="select"
-                  options="aud,usd"
+                  options="{{window.config ? window.config.fiatCurrencies.join(',') : ''}}"
                   consumers=".market-combiner"
                   value="aud"
                 ></input-provider>
