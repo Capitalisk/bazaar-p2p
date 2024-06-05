@@ -70,6 +70,10 @@
         background-color: #f8f8f8;
         border-radius: 5px;
       }
+
+      .centered-cell {
+        text-align: center;
+      }
     </style>
   </head>
   <body>
@@ -209,6 +213,13 @@
                 </tr>
               </template>
 
+
+              <template slot="no-item">
+                <tr>
+                  <td colspan="6" class="centered-cell">No sell offers.</td>
+                </tr>
+              </template>
+
               <template slot="item">
                 <tr>
                   <td>
@@ -316,7 +327,7 @@
 
               <hr>
 
-              <fieldset>
+              <fieldset class="container-vertical container-spaced-medium">
                 <legend>Bank wire transfer details</legend>
 
                 <label>
