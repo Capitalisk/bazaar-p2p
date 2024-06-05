@@ -12,6 +12,20 @@
     <script src="https://saasufy.com/node_modules/saasufy-components/model-input.js" type="module" defer></script>
     <script src="https://saasufy.com/node_modules/saasufy-components/model-text.js" type="module" defer></script>
     <script src="https://saasufy.com/node_modules/saasufy-components/model-viewer.js" type="module" defer></script>
+    <script type="module">
+      const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || !location.hostname;
+      try {
+        window.config = (await import(isDev ?  './config.dev.js' : './config.js')).default;
+      } catch (error) {
+        console.error(`Failed to load config because of error: ${error.message}`);
+      }
+
+      let mainAppRouterViewport = document.querySelector('.main-app-router-viewport');
+      if (mainAppRouterViewport && window.config) {
+        // Only slot in the app-router's viewport once the config has been fully loaded.
+        mainAppRouterViewport.setAttribute('slot', 'viewport');
+      }
+    </script>
     <style>
       .card-container {
         border: 1px solid #cccccc;
@@ -75,10 +89,6 @@
         text-align: center;
       }
     </style>
-    <script type="module">
-      import config from './config.js';
-      window.config = config;
-    </script>
   </head>
   <body>
     <socket-provider class="container container-vertical container-centered-cross container-padded-large" url="wss://saasufy.com/sid8002/socketcluster/">
@@ -456,7 +466,7 @@
           </div>
         </template>
 
-        <div class="container container-vertical container-centered-cross" slot="viewport"></div>
+        <div class="container container-vertical container-centered-cross main-app-router-viewport"></div>
       </app-router>
     </socket-provider>
   </body>
