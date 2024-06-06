@@ -10,8 +10,8 @@
     <script src="https://saasufy.com/node_modules/saasufy-components/collection-adder-form.js" type="module" defer></script>
     <script src="https://saasufy.com/node_modules/saasufy-components/log-in-form.js" type="module" defer></script>
     <script src="https://saasufy.com/node_modules/saasufy-components/model-input.js" type="module" defer></script>
-    <script src="https://saasufy.com/node_modules/saasufy-components/model-text.js" type="module" defer></script>
     <script src="https://saasufy.com/node_modules/saasufy-components/model-viewer.js" type="module" defer></script>
+    <script src="https://saasufy.com/node_modules/saasufy-components/model-text.js" type="module" defer></script>
     <script src="https://saasufy.com/node_modules/saasufy-components/oauth-link.js" type="module" defer></script>
     <script type="module">
       const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || !location.hostname;
@@ -151,7 +151,7 @@
           </div>
         </template>
 
-        <template slot="page" route-path="/buy/:saleOfferId/wallet/:walletAddress">
+        <template slot="page" route-path="/buy/:saleOfferId/buy-offer/:buyOfferId" no-auth-redirect="/login-buyer">
           <div class="container container-vertical container-centered-cross">
             <h2>Buy crypto asset instructions</h2>
             <model-viewer
@@ -174,7 +174,7 @@
                   <div>Bank name: {{SaleOffer.bankName}}</div>
                   <div>Swift/BIC: {{SaleOffer.bankBIC}}</div>
                   <div>Account number: {{SaleOffer.bankAccountNumber}}</div>
-                  <div>Ref: {{walletAddress}}</div>
+                  <div>Ref: <model-text model-type="BuyOffer" model-id="{{buyOfferId}}" model-field="bankTransferRef"></model-text></div>
                 </div>
               </template>
 
@@ -183,63 +183,65 @@
           </div>
         </template>
 
-        <template slot="page" route-path="/buy/:saleOfferId"  no-auth-redirect="/login-buyer">
+        <template slot="page" route-path="/buy/:saleOfferId" no-auth-redirect="/login-buyer">
           <div class="container container-vertical container-centered-cross">
             <h2>Buy crypto asset</h2>
-            <div class="container container-vertical container-spaced-medium">
-              <div>
-                Min qty:
-                <model-text
-                  type="text"
-                  model-type="SaleOffer"
-                  model-id="{{saleOfferId}}"
-                  model-field="minQty"
-                ></model-text>
-              </div>
-              <div>
-                Max qty:
-                <model-text
-                  type="text"
-                  model-type="SaleOffer"
-                  model-id="{{saleOfferId}}"
-                  model-field="maxQty"
-                ></model-text>
-              </div>
-              <div>
-                Price:
-                <model-text
-                  type="text"
-                  model-type="SaleOffer"
-                  model-id="{{saleOfferId}}"
-                  model-field="price"
-                ></model-text>
-                per
-                <model-text
-                  type="text"
-                  model-type="SaleOffer"
-                  model-id="{{saleOfferId}}"
-                  model-field="cryptoAsset"
-                ></model-text>
-              </div>
-              <div>
-                Your
-                <model-text
-                  type="text"
-                  model-type="SaleOffer"
-                  model-id="{{saleOfferId}}"
-                  model-field="cryptoAsset"
-                ></model-text>
-                wallet address:
-                <input-provider
-                  type="text"
-                  consumers=".buy-offer-link:href"
-                  value=""
-                  provider-template="#/buy/{{saleOfferId}}/wallet/{{value}}"
-                  placeholder="Wallet address"
-                ></input-provider>
-              </div>
-              <a class="buy-offer-link" href="javascript: void(0)">Buy</a>
-            </div>
+            <model-viewer
+              class="container container-vertical container-spaced-medium"
+              model-type="SaleOffer"
+              model-id="{{saleOfferId}}"
+              model-fields="bankBeneficiaryName,minQty,maxQty,price,cryptoAsset,fiatCurrency,accountId"
+            >
+              <template slot="item">
+                <div>
+                  Seller: {{SaleOffer.bankBeneficiaryName}}
+                </div>
+                <div>
+                  Min qty: {{SaleOffer.minQty}}
+                </div>
+                <div>
+                  Max qty: {{SaleOffer.maxQty}}
+                </div>
+                <div>
+                  Price: {{SaleOffer.price}} per {{SaleOffer.cryptoAsset.toUpperCase()}}
+                </div>
+                <collection-adder-form
+                  collection-type="BuyOffer"
+                  trim-spaces
+                  success-consumers=".main-app-router:target-page"
+                  error-consumers=".buy-offer-adder-error"
+                  provider-template="{{value.resource ? `/buy/${value.resource.saleOfferId}/buy-offer/${value.resource.id}` : value.error.message}}"
+                >
+                  <div class="container-vertical container-spaced-large">
+                    <label>
+                      <div>Your {{SaleOffer.cryptoAsset.toUpperCase()}} wallet address:</div>
+                      <input-provider
+                        name="walletAddress"
+                        type="text"
+                        placeholder="Wallet address"
+                        consumers=".buy-bank-transfer-ref"
+                        value=""
+                        debounce-delay="0"
+                      ></input-provider>
+                    </label>
+
+                    <input name="saleOfferId" type="hidden" value="{{saleOfferId}}">
+                    <input name="price" type="hidden" value="{{SaleOffer.price}}">
+                    <input name="fiatCurrency" type="hidden" value="{{SaleOffer.fiatCurrency}}">
+                    <input name="sellerAccountId" type="hidden" value="{{SaleOffer.accountId}}">
+                    <input name="accountId" type="hidden" value="{{socket?.authToken?.accountId}}">
+                    <input name="readerAccountIds" type="hidden" value="{{socket?.authToken?.accountId}},{{SaleOffer.accountId}}">
+                    <input class="buy-bank-transfer-ref" name="bankTransferRef" type="hidden" value="">
+
+                    <div class="buy-offer-adder-error error"></div>
+
+                    <input type="submit" value="Buy">
+                  </div>
+                </collection-adder-form>
+              </template>
+
+              <div class="container container-vertical container-spaced-medium" slot="viewport"></div>
+            </model-viewer>
           </div>
         </template>
 
@@ -379,7 +381,7 @@
 
               <hr>
 
-              <fieldset class="container-vertical container-spaced-medium">
+              <fieldset class="container-vertical container-spaced-medium container-padded-medium">
                 <legend>Bank wire transfer details</legend>
 
                 <label>
