@@ -175,17 +175,14 @@
             <model-viewer
               model-type="SaleOffer"
               model-id="{{saleOfferId}}"
-              model-fields="minQty,maxQty,price,bankBeneficiaryName,bankName,bankBIC,bankAccountNumber,fiatCurrency"
+              model-fields="minQty,maxQty,price,bankBeneficiaryName,bankName,bankBIC,bankAccountNumber,fiatCurrency,cryptoAsset"
             >
               <template slot="item">
-                <b>Wire transfer instructions</b>
+                <b>Wire transfer instructions:</b>
                 <div>
-                  Send an amount between
-                  {{Math.round(SaleOffer.minQty * SaleOffer.price)}}
-                  and
-                  {{Math.round(SaleOffer.maxQty * SaleOffer.price)}}
+                  Send <model-text model-type="BuyOffer" model-id="{{buyOfferId}}" model-field="fiatAmount"></model-text>
                   {{SaleOffer.fiatCurrency.toUpperCase()}}
-                  to the following bank account via a wire transfer:
+                  via a wire transfer using the following details as part of your transaction:
                 </div>
                 <div class="bank-details-area">
                   <div>Account name: {{SaleOffer.bankBeneficiaryName}}</div>
@@ -193,6 +190,19 @@
                   <div>Swift/BIC: {{SaleOffer.bankBIC}}</div>
                   <div>Account number: {{SaleOffer.bankAccountNumber}}</div>
                   <div>Ref: <model-text model-type="BuyOffer" model-id="{{buyOfferId}}" model-field="bankTransferRef"></model-text></div>
+                </div>
+                <div>
+                  <span>You will receive</span>
+                  <model-viewer
+                    style="display: inline-block"
+                    model-type="BuyOffer"
+                    model-id="{{buyOfferId}}"
+                    model-fields="fiatAmount,fiatCurrency,price,walletAddress"
+                  >
+                    <template slot="item">{{BuyOffer.fiatAmount * BuyOffer.price}} {{SaleOffer.cryptoAsset.toUpperCase()}} into the following wallet address: {{BuyOffer.walletAddress}}</template>
+                    <div slot="viewport"></div>
+                  </model-viewer>
+                  <p>Settlement can take up to {{window.config ? window.config.settlementDelay : '...'}}.</p>
                 </div>
               </template>
 
@@ -228,15 +238,24 @@
                   trim-spaces
                   success-consumers=".main-app-router:target-page"
                   error-consumers=".buy-offer-adder-error"
-                  provider-template="{{value.resource ? `/buy/${value.resource.saleOfferId}/buy-offer/${value.resource.id}` : value.error.message}}"
+                  provider-template="{{{
+                    value.resource ? `/buy/${value.resource.saleOfferId}/buy-offer/${value.resource.id}` :
+                    `<ul>${[
+                      value.error.fieldErrors.fiatAmount ? 'The fiat amount was invalid.' : '',
+                      value.error.fieldErrors.walletAddress ? 'The wallet address was invalid.' : ''
+                    ].filter(errorMessage => errorMessage).map(errorMessage => `<li>${errorMessage}</li>`).join('')}</ul>`
+                  }}}"
                 >
                   <div class="container-vertical container-spaced-large">
+                    <label>
+                      Amount of {{SaleOffer.fiatCurrency.toUpperCase()}} to convert:
+                      <input type="text" name="fiatAmount">
+                    </label>
                     <label>
                       <div>Your {{SaleOffer.cryptoAsset.toUpperCase()}} wallet address:</div>
                       <input-provider
                         name="walletAddress"
                         type="text"
-                        placeholder="Wallet address"
                         consumers=".buy-bank-transfer-ref"
                         value=""
                         debounce-delay="0"

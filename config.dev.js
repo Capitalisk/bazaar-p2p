@@ -1,6 +1,7 @@
 export default {
   fiatCurrencies: [ 'aud', 'usd' ],
   cryptoAssets: [ 'clsk', 'btc' ],
+  settlementDelay: '2 weeks',
   oauth: {
     google: {
       redirectURI: 'http://localhost:8000/oauth.html',
