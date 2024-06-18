@@ -182,7 +182,7 @@
                 <div>
                   Send <model-text model-type="BuyOffer" model-id="{{buyOfferId}}" model-field="fiatAmount"></model-text>
                   {{SaleOffer.fiatCurrency.toUpperCase()}}
-                  via a wire transfer using the following details as part of your transaction:
+                  via a wire transfer using the following details:
                 </div>
                 <div class="bank-details-area">
                   <div>Account name: {{SaleOffer.bankBeneficiaryName}}</div>
@@ -199,7 +199,7 @@
                     model-id="{{buyOfferId}}"
                     model-fields="fiatAmount,fiatCurrency,price,walletAddress"
                   >
-                    <template slot="item">{{BuyOffer.fiatAmount * BuyOffer.price}} {{SaleOffer.cryptoAsset.toUpperCase()}} into the following wallet address: {{BuyOffer.walletAddress}}</template>
+                    <template slot="item">{{Math.round(BuyOffer.fiatAmount / BuyOffer.price)}} {{SaleOffer.cryptoAsset.toUpperCase()}} into the following wallet address: {{BuyOffer.walletAddress}}</template>
                     <div slot="viewport"></div>
                   </model-viewer>
                   <p>Settlement can take up to {{window.config ? window.config.settlementDelay : '...'}}.</p>
@@ -282,6 +282,104 @@
           </div>
         </template>
 
+        <template slot="page" route-path="/my-sell-offers/:saleOfferId/buy-offers" no-auth-redirect="/login-seller">
+          <div class="container container-vertical container-centered-cross">
+            <h2>Inbound buy offers for sale offer {{saleOfferId}}</h2>
+            <model-viewer
+              class="container container-vertical container-spaced-medium"
+              model-type="SaleOffer"
+              model-id="{{saleOfferId}}"
+              model-fields="bankBeneficiaryName,fiatCurrency,cryptoAsset,minQty,maxQty,price"
+            >
+              <template slot="item">
+                <div>Bank account name: {{SaleOffer.bankBeneficiaryName}}</div>
+                <div>Fiat currency: {{SaleOffer.fiatCurrency.toUpperCase()}}</div>
+                <div>Crypto asset: {{SaleOffer.cryptoAsset.toUpperCase()}}</div>
+                <div>Min qty: {{SaleOffer.minQty}}</div>
+                <div>Max qty: {{SaleOffer.maxQty}}</div>
+                <div>Price: {{SaleOffer.price}}</div>
+              </template>
+              <div slot="viewport"></div>
+            </model-viewer>
+
+            <hr>
+
+            <collection-viewer
+              collection-type="BuyOffer"
+              collection-fields="bankTransferRef,fiatAmount,fiatCurrency,buyerAccountId,saleOfferId,price,walletAddress"
+              collection-view="sellerAccountSaleOfferView"
+              collection-view-params="sellerAccountId='{{socket?.authToken?.accountId}}',saleOfferId='{{saleOfferId}}'"
+              collection-page-size="5"
+            >
+              <template slot="first-item">
+                <tr>
+                  <th>Buyer</th>
+                  <th>Bank transfer ref</th>
+                  <th>Fiat amount</th>
+                  <th>Price</th>
+                  <th>Crypto amount</th>
+                  <th>Wallet address</th>
+                </tr>
+              </template>
+
+
+              <template slot="no-item">
+                <tr>
+                  <td colspan="6" class="centered-cell">No buy offers.</td>
+                </tr>
+              </template>
+
+              <template slot="item">
+                <tr>
+                  <td>
+                    <model-text
+                      model-type="Account"
+                      model-id="{{BuyOffer.buyerAccountId}}"
+                      model-field="username"
+                    ></model-text>
+                  </td>
+                  <td>
+                    {{BuyOffer.bankTransferRef}}
+                  </td>
+                  <td>
+                    {{BuyOffer.fiatAmount}} {{BuyOffer.fiatCurrency.toUpperCase()}}
+                  </td>
+                  <td>
+                    {{BuyOffer.price}}
+                  </td>
+                  <td>
+                    {{Math.round(BuyOffer.fiatAmount / BuyOffer.price)}}
+                    <model-viewer
+                      style="display: inline-block"
+                      model-type="SaleOffer"
+                      model-id="{{BuyOffer.saleOfferId}}"
+                      model-fields="cryptoAsset"
+                    >
+                      <template slot="item">{{SaleOffer.cryptoAsset.toUpperCase()}}</template>
+                      <div slot="viewport"></div>
+                    </model-viewer>
+                  </td>
+                  <td>
+                    {{BuyOffer.walletAddress}}
+                  </td>
+                </tr>
+              </template>
+
+              <template slot="loader">
+                <div class="loading-spinner-container">
+                <div class="spinning">&#8635;</div>
+                </div>
+              </template>
+
+              <table slot="viewport" class="my-sell-offers-viewport"></table>
+
+              <input class="pagination-button" slot="previous-page" type="button" value="&lt;">
+              <div slot="page-number"></div>
+              <input class="pagination-button" slot="next-page" type="button" value="&gt;">
+            </collection-viewer>
+          </div>
+        </template>
+
         <template slot="page" route-path="/my-sell-offers" no-auth-redirect="/login-seller">
           <div class="container container-vertical container-centered-cross">
             <h2>My sell offers</h2>
@@ -301,6 +399,7 @@
                   <th>Price</th>
                   <th>Fiat currency</th>
                   <th>Crypto asset</th>
+                  <th>Buy offers</th>
                 </tr>
               </template>
 
@@ -349,8 +448,9 @@
                       placeholder="Price"
                     ></model-input>
                   </td>
-                  <td>{{SaleOffer.fiatCurrency}}</td>
-                  <td>{{SaleOffer.cryptoAsset}}</td>
+                  <td>{{SaleOffer.fiatCurrency.toUpperCase()}}</td>
+                  <td>{{SaleOffer.cryptoAsset.toUpperCase()}}</td>
+                  <td><a href="#/my-sell-offers/{{SaleOffer.id}}/buy-offers">View</a></td>
                 </tr>
               </template>
 
