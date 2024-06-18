@@ -13,6 +13,7 @@
     <script src="https://saasufy.com/node_modules/saasufy-components/model-viewer.js" type="module" defer></script>
     <script src="https://saasufy.com/node_modules/saasufy-components/model-text.js" type="module" defer></script>
     <script src="https://saasufy.com/node_modules/saasufy-components/oauth-link.js" type="module" defer></script>
+    <script src="https://saasufy.com/node_modules/saasufy-components/log-out.js" type="module" defer></script>
     <script type="module">
       const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || !location.hostname;
       try {
@@ -110,6 +111,13 @@
   <body>
     <socket-provider class="container container-vertical container-centered-cross container-padded-large" url="wss://saasufy.com/sid8002/socketcluster/">
       <div class="container container-medium container-spaced-large container-horizontal nav-bar">
+        <app-router class="nav-app-router" default-page="/">
+          <template slot="page" route-path="/" auth-redirect="/logged-in"></template>
+          <template slot="page" route-path="/logged-in">
+            <log-out onclick="logOut()"><a href="javascript:void(0)">Log out</a></log-out>
+          </template>
+          <div slot="viewport"></div>
+        </app-router>
         <a href="#/market">Market</a>
         <a href="#/my-sell-offers">My sell offers</a>
         <a href="#/sell">Sell crypto</a>
@@ -120,14 +128,24 @@
         <template slot="page" route-path="" redirect="/market"></template>
 
         <template slot="page" route-path="/login-seller">
-          <h2>Login as seller</h2>
-          <log-in-form
-            hostname="capitalisk.com"
-            port="443"
-            network-symbol="clsk"
-            chain-module-name="capitalisk_chain"
-            secure="true"
-          ></log-in-form>
+          <div class="container container-vertical container-centered-cross container-spaced-very-large">
+            <h2>Login as seller</h2>
+            <log-in-form
+              hostname="capitalisk.com"
+              port="443"
+              network-symbol="clsk"
+              chain-module-name="capitalisk_chain"
+              secure="true"
+            ></log-in-form>
+            <oauth-link class="log-in-oauth" provider="google" client-id="{{config.oauth.google.clientId}}" use-local-storage>
+              <template slot="item">
+                <a href="https://accounts.google.com/o/oauth2/v2/auth?client_id={{oauth.clientId}}&response_type=code&scope=openid%20email&state={{oauth.state}}&redirect_uri={{config.oauth.google.redirectURI}}" target="_blank" class="google-log-in-button">
+                  <img class="small-icon" src="assets/google-icon.png" alt="Google icon"><span>Log in with Google</span>
+                </a>
+              </template>
+              <div slot="viewport"></div>
+            </oauth-link>
+          </div>
         </template>
 
         <template slot="page" route-path="/login-buyer">
@@ -228,8 +246,8 @@
                     <input name="saleOfferId" type="hidden" value="{{saleOfferId}}">
                     <input name="price" type="hidden" value="{{SaleOffer.price}}">
                     <input name="fiatCurrency" type="hidden" value="{{SaleOffer.fiatCurrency}}">
+                    <input name="buyerAccountId" type="hidden" value="{{socket?.authToken?.accountId}}">
                     <input name="sellerAccountId" type="hidden" value="{{SaleOffer.accountId}}">
-                    <input name="accountId" type="hidden" value="{{socket?.authToken?.accountId}}">
                     <input name="readerAccountIds" type="hidden" value="{{socket?.authToken?.accountId}},{{SaleOffer.accountId}}">
                     <input class="buy-bank-transfer-ref" name="bankTransferRef" type="hidden" value="">
 
