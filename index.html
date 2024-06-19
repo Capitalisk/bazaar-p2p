@@ -284,99 +284,122 @@
 
         <template slot="page" route-path="/my-sell-offers/:saleOfferId/buy-offers" no-auth-redirect="/login-seller">
           <div class="container container-vertical container-centered-cross">
-            <h2>Inbound buy offers for sale offer {{saleOfferId}}</h2>
-            <model-viewer
-              class="container container-vertical container-spaced-medium"
-              model-type="SaleOffer"
-              model-id="{{saleOfferId}}"
-              model-fields="bankBeneficiaryName,fiatCurrency,cryptoAsset,minQty,maxQty,price"
-            >
-              <template slot="item">
-                <div>Bank account name: {{SaleOffer.bankBeneficiaryName}}</div>
-                <div>Fiat currency: {{SaleOffer.fiatCurrency.toUpperCase()}}</div>
-                <div>Crypto asset: {{SaleOffer.cryptoAsset.toUpperCase()}}</div>
-                <div>Min qty: {{SaleOffer.minQty}}</div>
-                <div>Max qty: {{SaleOffer.maxQty}}</div>
-                <div>Price: {{SaleOffer.price}}</div>
-              </template>
-              <div slot="viewport"></div>
-            </model-viewer>
+            <h2>Inbound buy offers</h2>
 
-            <hr>
+            <div class="container container-vertical container-spaced-large">
+              <model-viewer
+                class="container container-vertical container-spaced-medium"
+                model-type="SaleOffer"
+                model-id="{{saleOfferId}}"
+                model-fields="bankBeneficiaryName,fiatCurrency,cryptoAsset,minQty,maxQty,price"
+              >
+                <template slot="item">
+                  <div>Sale offer ID: {{saleOfferId}}</div>
+                  <div>Bank account name: {{SaleOffer.bankBeneficiaryName}}</div>
+                  <div>Fiat currency: {{SaleOffer.fiatCurrency.toUpperCase()}}</div>
+                  <div>Crypto asset: {{SaleOffer.cryptoAsset.toUpperCase()}}</div>
+                  <div>Min qty: {{SaleOffer.minQty}}</div>
+                  <div>Max qty: {{SaleOffer.maxQty}}</div>
+                  <div>Price: {{SaleOffer.price}}</div>
+                </template>
+                <div slot="viewport"></div>
+              </model-viewer>
 
-            <collection-viewer
-              collection-type="BuyOffer"
-              collection-fields="bankTransferRef,fiatAmount,fiatCurrency,buyerAccountId,saleOfferId,price,walletAddress"
-              collection-view="sellerAccountSaleOfferView"
-              collection-view-params="sellerAccountId='{{socket?.authToken?.accountId}}',saleOfferId='{{saleOfferId}}'"
-              collection-page-size="5"
-            >
-              <template slot="first-item">
-                <tr>
-                  <th>Buyer</th>
-                  <th>Bank transfer ref</th>
-                  <th>Fiat amount</th>
-                  <th>Price</th>
-                  <th>Crypto amount</th>
-                  <th>Wallet address</th>
-                </tr>
-              </template>
+              <input-provider
+                type="select"
+                options="pending,fulfilled"
+                consumers=".sale-offer-inbound-buy-offers-viewer:collection-view-params"
+                provider-template="sellerAccountId='{{socket?.authToken?.accountId}}',saleOfferId='{{saleOfferId}}',isFulfilled={{value === 'fulfilled' ? true : false}}"
+                style="align-self: flex-start;"
+              ></input-provider>
+
+              <collection-viewer
+                class="sale-offer-inbound-buy-offers-viewer"
+                collection-type="BuyOffer"
+                collection-fields="bankTransferRef,fiatAmount,fiatCurrency,buyerAccountId,saleOfferId,price,walletAddress"
+                collection-view="sellerAccountSaleOfferView"
+                collection-view-params="sellerAccountId='{{socket?.authToken?.accountId}}',saleOfferId='{{saleOfferId}}',isFulfilled=false"
+                collection-view-primary-fields="sellerAccountId,saleOfferId,isFulfilled"
+                collection-page-size="5"
+              >
+                <template slot="first-item">
+                  <tr>
+                    <th style="width: 200px">Buyer</th>
+                    <th>Bank transfer ref</th>
+                    <th>Fiat amount</th>
+                    <th>Price</th>
+                    <th>Crypto amount</th>
+                    <th>Wallet address</th>
+                    <th>Fulfilled</th>
+                  </tr>
+                </template>
 
 
-              <template slot="no-item">
-                <tr>
-                  <td colspan="6" class="centered-cell">No buy offers.</td>
-                </tr>
-              </template>
+                <template slot="no-item">
+                  <tr>
+                    <td colspan="7" class="centered-cell">No buy offers.</td>
+                  </tr>
+                </template>
 
-              <template slot="item">
-                <tr>
-                  <td>
-                    <model-text
-                      model-type="Account"
-                      model-id="{{BuyOffer.buyerAccountId}}"
-                      model-field="username"
-                    ></model-text>
-                  </td>
-                  <td>
-                    {{BuyOffer.bankTransferRef}}
-                  </td>
-                  <td>
-                    {{BuyOffer.fiatAmount}} {{BuyOffer.fiatCurrency.toUpperCase()}}
-                  </td>
-                  <td>
-                    {{BuyOffer.price}}
-                  </td>
-                  <td>
-                    {{Math.round(BuyOffer.fiatAmount / BuyOffer.price)}}
-                    <model-viewer
-                      style="display: inline-block"
-                      model-type="SaleOffer"
-                      model-id="{{BuyOffer.saleOfferId}}"
-                      model-fields="cryptoAsset"
-                    >
-                      <template slot="item">{{SaleOffer.cryptoAsset.toUpperCase()}}</template>
-                      <div slot="viewport"></div>
-                    </model-viewer>
-                  </td>
-                  <td>
-                    {{BuyOffer.walletAddress}}
-                  </td>
-                </tr>
-              </template>
+                <template slot="item">
+                  <tr>
+                    <td>
+                      <model-text
+                        style="display: block; width: 180px; overflow-x: hidden; text-overflow: ellipsis;"
+                        model-type="Account"
+                        model-id="{{BuyOffer.buyerAccountId}}"
+                        model-field="username"
+                      ></model-text>
+                    </td>
+                    <td>
+                      {{BuyOffer.bankTransferRef}}
+                    </td>
+                    <td>
+                      {{BuyOffer.fiatAmount}} {{BuyOffer.fiatCurrency.toUpperCase()}}
+                    </td>
+                    <td>
+                      {{BuyOffer.price}}
+                    </td>
+                    <td>
+                      {{Math.round(BuyOffer.fiatAmount / BuyOffer.price)}}
+                      <model-viewer
+                        style="display: inline-block"
+                        model-type="SaleOffer"
+                        model-id="{{BuyOffer.saleOfferId}}"
+                        model-fields="cryptoAsset"
+                      >
+                        <template slot="item">{{SaleOffer.cryptoAsset.toUpperCase()}}</template>
+                        <div slot="viewport"></div>
+                      </model-viewer>
+                    </td>
+                    <td>
+                      {{BuyOffer.walletAddress}}
+                    </td>
+                    <td class="centered-cell">
+                      <model-input
+                        type="checkbox"
+                        model-type="BuyOffer"
+                        model-id="{{BuyOffer.id}}"
+                        model-field="isFulfilled"
+                        placeholder=""
+                      ></model-input>
+                    </td>
+                  </tr>
+                </template>
 
-              <template slot="loader">
-                <div class="loading-spinner-container">
-                <div class="spinning">&#8635;</div>
-                </div>
-              </template>
+                <template slot="loader">
+                  <div class="loading-spinner-container">
+                  <div class="spinning">&#8635;</div>
+                  </div>
+                </template>
 
-              <table slot="viewport" class="my-sell-offers-viewport"></table>
+                <table slot="viewport" class="my-sell-offers-viewport"></table>
 
-              <input class="pagination-button" slot="previous-page" type="button" value="&lt;">
-              <div slot="page-number"></div>
-              <input class="pagination-button" slot="next-page" type="button" value="&gt;">
-            </collection-viewer>
+                <input class="pagination-button" slot="previous-page" type="button" value="&lt;">
+                <div slot="page-number"></div>
+                <input class="pagination-button" slot="next-page" type="button" value="&gt;">
+              </collection-viewer>
+            </div>
           </div>
         </template>
 
