@@ -309,7 +309,7 @@
                 type="select"
                 options="pending,fulfilled"
                 consumers=".sale-offer-inbound-buy-offers-viewer:collection-view-params"
-                provider-template="sellerAccountId='{{socket?.authToken?.accountId}}',saleOfferId='{{saleOfferId}}',isFulfilled={{value === 'fulfilled' ? true : false}}"
+                provider-template="sellerAccountId='{{socket?.authToken?.accountId}}',saleOfferId='{{saleOfferId}}',isFulfilled={{value === 'fulfilled' ? true : false}},sort='createdAt {{value === 'fulfilled' ? 'desc' : 'asc'}}'"
                 style="align-self: flex-start;"
               ></input-provider>
 
@@ -318,7 +318,7 @@
                 collection-type="BuyOffer"
                 collection-fields="bankTransferRef,fiatAmount,fiatCurrency,buyerAccountId,saleOfferId,price,walletAddress"
                 collection-view="sellerAccountSaleOfferView"
-                collection-view-params="sellerAccountId='{{socket?.authToken?.accountId}}',saleOfferId='{{saleOfferId}}',isFulfilled=false"
+                collection-view-params="sellerAccountId='{{socket?.authToken?.accountId}}',saleOfferId='{{saleOfferId}}',isFulfilled=false,sort='createdAt asc'"
                 collection-view-primary-fields="sellerAccountId,saleOfferId,isFulfilled"
                 collection-page-size="5"
               >
