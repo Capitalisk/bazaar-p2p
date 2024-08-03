@@ -119,6 +119,7 @@
           <div slot="viewport"></div>
         </app-router>
         <a href="#/market">Market</a>
+        <a href="#/my-buy-offers">My buy offers</a>
         <a href="#/my-sell-offers">My sell offers</a>
         <a href="#/sell">Sell crypto</a>
       </div>
@@ -231,7 +232,7 @@
                   Max qty: {{SaleOffer.maxQty}}
                 </div>
                 <div>
-                  Price: {{SaleOffer.price}} per {{SaleOffer.cryptoAsset.toUpperCase()}}
+                  Price: {{SaleOffer.price}} {{SaleOffer.fiatCurrency.toUpperCase()}} per {{SaleOffer.cryptoAsset.toUpperCase()}}
                 </div>
                 <collection-adder-form
                   collection-type="BuyOffer"
@@ -265,9 +266,11 @@
                     <input name="saleOfferId" type="hidden" value="{{saleOfferId}}">
                     <input name="price" type="hidden" value="{{SaleOffer.price}}">
                     <input name="fiatCurrency" type="hidden" value="{{SaleOffer.fiatCurrency}}">
+                    <input name="cryptoAsset" type="hidden" value="{{SaleOffer.cryptoAsset}}">
                     <input name="buyerAccountId" type="hidden" value="{{socket?.authToken?.accountId}}">
                     <input name="sellerAccountId" type="hidden" value="{{SaleOffer.accountId}}">
                     <input name="readerAccountIds" type="hidden" value="{{socket?.authToken?.accountId}},{{SaleOffer.accountId}}">
+                    <input name="isFulfilled" output-type="boolean" type="hidden" value="false">
                     <input class="buy-bank-transfer-ref" name="bankTransferRef" type="hidden" value="">
 
                     <div class="buy-offer-adder-error error"></div>
@@ -429,7 +432,7 @@
 
               <template slot="no-item">
                 <tr>
-                  <td colspan="6" class="centered-cell">No sell offers.</td>
+                  <td colspan="7" class="centered-cell">No sell offers.</td>
                 </tr>
               </template>
 
@@ -474,6 +477,92 @@
                   <td>{{SaleOffer.fiatCurrency.toUpperCase()}}</td>
                   <td>{{SaleOffer.cryptoAsset.toUpperCase()}}</td>
                   <td><a href="#/my-sell-offers/{{SaleOffer.id}}/buy-offers">View</a></td>
+                </tr>
+              </template>
+
+              <template slot="loader">
+                <div class="loading-spinner-container">
+                <div class="spinning">&#8635;</div>
+                </div>
+              </template>
+
+              <table slot="viewport" class="my-sell-offers-viewport"></table>
+
+              <input class="pagination-button" slot="previous-page" type="button" value="&lt;">
+              <div slot="page-number"></div>
+              <input class="pagination-button" slot="next-page" type="button" value="&gt;">
+            </collection-viewer>
+          </div>
+        </template>
+
+        <template slot="page" route-path="/my-buy-offers" no-auth-redirect="/login-buyer">
+          <div class="container container-vertical container-centered-cross container-spaced-medium">
+            <h2>My buy offers</h2>
+
+            <input-provider
+              type="select"
+              options="pending,fulfilled"
+              consumers=".my-buy-offers-viewer:collection-view-params"
+              provider-template="buyerAccountId='{{socket?.authToken?.accountId}}',isFulfilled={{value === 'fulfilled' ? true : false}},sort='createdAt {{value === 'fulfilled' ? 'desc' : 'asc'}}'"
+              style="align-self: flex-start;"
+            ></input-provider>
+            
+            <collection-viewer
+              class="my-buy-offers-viewer"
+              collection-type="BuyOffer"
+              collection-fields="saleOfferId,walletAddress,price,fiatCurrency,fiatAmount,cryptoAsset,sellerAccountId,bankTransferRef,isFulfilled"
+              collection-view="buyerAccountView"
+              collection-view-params="buyerAccountId='{{socket?.authToken?.accountId}}',isFulfilled=false,sort='createdAt asc'"
+              collection-view-primary-fields="buyerAccountId,isFulfilled"
+              collection-page-size="5"
+            >
+              <template slot="first-item">
+                <tr>
+                  <th>Seller</th>
+                  <th>Transfer reference</th>
+                  <th>Wallet address</th>
+                  <th>Price</th>
+                  <th>Crypto amount</th>
+                  <th>Review</th>
+                </tr>
+              </template>
+
+
+              <template slot="no-item">
+                <tr>
+                  <td colspan="7" class="centered-cell">No buy offers.</td>
+                </tr>
+              </template>
+
+              <template slot="item">
+                <tr>
+                  <td>
+                    <model-text model-type="Account" model-id="{{BuyOffer.sellerAccountId}}" model-field="username"></model-text>
+                  </td>
+                  <td>
+                    {{BuyOffer.bankTransferRef}}
+                  </td>
+                  <td>
+                    {{BuyOffer.walletAddress}}
+                  </td>
+                  <td>
+                    {{BuyOffer.price}} {{BuyOffer.fiatCurrency.toUpperCase()}}
+                  </td>
+                  <td>
+                    {{Math.round(BuyOffer.fiatAmount / BuyOffer.price)}}
+                    <model-viewer
+                      style="display: inline-block"
+                      model-type="SaleOffer"
+                      model-id="{{BuyOffer.saleOfferId}}"
+                      model-fields="cryptoAsset"
+                    >
+                      <template slot="item">{{BuyOffer.cryptoAsset.toUpperCase()}}</template>
+                      <div slot="viewport"></div>
+                    </model-viewer>
+                  </td>
+                  <td>
+                    {{{BuyOffer.isFulfilled ? '<input type="button" value="Review">' : '<input type="button" value="Review" disabled>'}}}
+                  </td>
                 </tr>
               </template>
 
