@@ -242,8 +242,9 @@
                   provider-template="{{{
                     value.resource ? `/buy/${value.resource.saleOfferId}/buy-offer/${value.resource.id}` :
                     `<ul>${[
-                      value.error.fieldErrors.fiatAmount ? 'The fiat amount was invalid.' : '',
-                      value.error.fieldErrors.walletAddress ? 'The wallet address was invalid.' : ''
+                      value.error.fieldErrors?.fiatAmount ? 'The fiat amount was invalid.' : '',
+                      value.error.fieldErrors?.walletAddress ? 'The wallet address was invalid.' : '',
+                      !value.error.fieldErrors ? value.error.message : ''
                     ].filter(errorMessage => errorMessage).map(errorMessage => `<li>${errorMessage}</li>`).join('')}</ul>`
                   }}}"
                 >
@@ -270,7 +271,6 @@
                     <input name="buyerAccountId" type="hidden" value="{{socket?.authToken?.accountId}}">
                     <input name="sellerAccountId" type="hidden" value="{{SaleOffer.accountId}}">
                     <input name="readerAccountIds" type="hidden" value="{{socket?.authToken?.accountId}},{{SaleOffer.accountId}}">
-                    <input name="isFulfilled" output-type="boolean" type="hidden" value="false">
                     <input class="buy-bank-transfer-ref" name="bankTransferRef" type="hidden" value="">
 
                     <div class="buy-offer-adder-error error"></div>
