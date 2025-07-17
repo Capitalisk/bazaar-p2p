@@ -27,6 +27,30 @@
         // Only slot in the app-router's viewport once the config has been fully loaded.
         mainAppRouterViewport.setAttribute('slot', 'viewport');
       }
+
+      // Function to update buy offer status
+      window.updateBuyOfferStatus = async function(buyOfferId, newStatus) {
+        try {
+          let socket = document.querySelector('socket-provider').getSocket();
+          if (!socket) {
+            console.error('Socket not available');
+            return;
+          }
+          
+          // Update the buy offer status using the proper Saasufy CRUD API
+          let result = await socket.invoke('crud', {
+            action: 'update',
+            type: 'BuyOffer',
+            id: buyOfferId,
+            field: 'status',
+            value: newStatus
+          });
+          
+          console.log('Buy offer status updated successfully');
+        } catch (error) {
+          console.error('Error updating buy offer status:', error);
+        }
+      };
     </script>
     <style>
       .card-container {
@@ -272,6 +296,7 @@
                     <input name="sellerAccountId" type="hidden" value="{{SaleOffer.accountId}}">
                     <input name="readerAccountIds" type="hidden" value="{{socket?.authToken?.accountId}},{{SaleOffer.accountId}}">
                     <input class="buy-bank-transfer-ref" name="bankTransferRef" type="hidden" value="">
+                    <input name="status" type="hidden" value="pending">
 
                     <div class="buy-offer-adder-error error"></div>
 
@@ -310,19 +335,19 @@
 
               <input-provider
                 type="select"
-                options="pending,fulfilled"
+                options="pending,approved,fulfilled"
                 consumers=".sale-offer-inbound-buy-offers-viewer:collection-view-params"
-                provider-template="sellerAccountId='{{socket?.authToken?.accountId}}',saleOfferId='{{saleOfferId}}',isFulfilled={{value === 'fulfilled' ? true : false}},sort='createdAt {{value === 'fulfilled' ? 'desc' : 'asc'}}'"
+                provider-template="sellerAccountId='{{socket?.authToken?.accountId}}',saleOfferId='{{saleOfferId}}',status='{{value}}',sort='createdAt {{value === 'fulfilled' ? 'desc' : 'asc'}}'"
                 style="align-self: flex-start;"
               ></input-provider>
 
               <collection-viewer
                 class="sale-offer-inbound-buy-offers-viewer"
                 collection-type="BuyOffer"
-                collection-fields="bankTransferRef,fiatAmount,fiatCurrency,buyerAccountId,saleOfferId,price,walletAddress"
+                collection-fields="bankTransferRef,fiatAmount,fiatCurrency,buyerAccountId,saleOfferId,price,walletAddress,status"
                 collection-view="sellerAccountSaleOfferView"
-                collection-view-params="sellerAccountId='{{socket?.authToken?.accountId}}',saleOfferId='{{saleOfferId}}',isFulfilled=false,sort='createdAt asc'"
-                collection-view-primary-fields="sellerAccountId,saleOfferId,isFulfilled"
+                collection-view-params="sellerAccountId='{{socket?.authToken?.accountId}}',saleOfferId='{{saleOfferId}}',status='pending',sort='createdAt asc'"
+                collection-view-primary-fields="sellerAccountId,saleOfferId,status"
                 collection-page-size="5"
               >
                 <template slot="first-item">
@@ -333,14 +358,15 @@
                     <th>Price</th>
                     <th>Crypto amount</th>
                     <th>Wallet address</th>
-                    <th>Fulfilled</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </template>
 
 
                 <template slot="no-item">
                   <tr>
-                    <td colspan="7" class="centered-cell">No buy offers.</td>
+                    <td colspan="8" class="centered-cell">No buy offers.</td>
                   </tr>
                 </template>
 
@@ -379,13 +405,16 @@
                       {{BuyOffer.walletAddress}}
                     </td>
                     <td class="centered-cell">
-                      <model-input
-                        type="checkbox"
-                        model-type="BuyOffer"
-                        model-id="{{BuyOffer.id}}"
-                        model-field="isFulfilled"
-                        placeholder=""
-                      ></model-input>
+                      {{BuyOffer.status}}
+                    </td>
+                    <td class="centered-cell">
+                      {{{
+                        BuyOffer.status === 'pending' ? 
+                          `<button onclick="updateBuyOfferStatus('${BuyOffer.id}', 'approved')">Approve</button>` : 
+                          BuyOffer.status === 'approved' ? 
+                            `<button onclick="updateBuyOfferStatus('${BuyOffer.id}', 'fulfilled')">Fulfill</button>` : 
+                            'Complete'
+                      }}}
                     </td>
                   </tr>
                 </template>
@@ -501,19 +530,19 @@
 
             <input-provider
               type="select"
-              options="pending,fulfilled"
+              options="pending,approved,fulfilled"
               consumers=".my-buy-offers-viewer:collection-view-params"
-              provider-template="buyerAccountId='{{socket?.authToken?.accountId}}',isFulfilled={{value === 'fulfilled' ? true : false}},sort='createdAt {{value === 'fulfilled' ? 'desc' : 'asc'}}'"
+              provider-template="buyerAccountId='{{socket?.authToken?.accountId}}',status='{{value}}',sort='createdAt {{value === 'fulfilled' ? 'desc' : 'asc'}}'"
               style="align-self: flex-start;"
             ></input-provider>
             
             <collection-viewer
               class="my-buy-offers-viewer"
               collection-type="BuyOffer"
-              collection-fields="saleOfferId,walletAddress,price,fiatCurrency,fiatAmount,cryptoAsset,sellerAccountId,bankTransferRef,isFulfilled"
+              collection-fields="saleOfferId,walletAddress,price,fiatCurrency,fiatAmount,cryptoAsset,sellerAccountId,bankTransferRef,status"
               collection-view="buyerAccountView"
-              collection-view-params="buyerAccountId='{{socket?.authToken?.accountId}}',isFulfilled=false,sort='createdAt asc'"
-              collection-view-primary-fields="buyerAccountId,isFulfilled"
+              collection-view-params="buyerAccountId='{{socket?.authToken?.accountId}}',status='pending',sort='createdAt asc'"
+              collection-view-primary-fields="buyerAccountId,status"
               collection-page-size="5"
             >
               <template slot="first-item">
@@ -523,6 +552,7 @@
                   <th>Wallet address</th>
                   <th>Price</th>
                   <th>Crypto amount</th>
+                  <th>Status</th>
                   <th>Review</th>
                 </tr>
               </template>
@@ -561,7 +591,10 @@
                     </model-viewer>
                   </td>
                   <td>
-                    {{{BuyOffer.isFulfilled ? '<input type="button" value="Review">' : '<input type="button" value="Review" disabled>'}}}
+                    {{BuyOffer.status}}
+                  </td>
+                  <td>
+                    {{{BuyOffer.status === 'fulfilled' ? '<input type="button" value="Review">' : '<input type="button" value="Review" disabled>'}}}
                   </td>
                 </tr>
               </template>
